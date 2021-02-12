@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package org.springframework.web.reactive.config;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -28,7 +27,6 @@ import reactor.test.StepVerifier;
 
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.context.support.GenericApplicationContext;
-import org.springframework.core.testfixture.io.buffer.DataBufferTestUtils;
 import org.springframework.http.CacheControl;
 import org.springframework.http.server.PathContainer;
 import org.springframework.web.reactive.HandlerMapping;
@@ -48,6 +46,7 @@ import org.springframework.web.reactive.resource.WebJarsResourceResolver;
 import org.springframework.web.testfixture.http.server.reactive.MockServerHttpRequest;
 import org.springframework.web.testfixture.server.MockServerWebExchange;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -71,13 +70,13 @@ public class ResourceHandlerRegistryTests {
 
 
 	@Test
-	public void noResourceHandlers() throws Exception {
+	public void noResourceHandlers() {
 		this.registry = new ResourceHandlerRegistry(new GenericApplicationContext());
 		assertThat((Object) this.registry.getHandlerMapping()).isNull();
 	}
 
 	@Test
-	public void mapPathToLocation() throws Exception {
+	public void mapPathToLocation() {
 		MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get(""));
 		exchange.getAttributes().put(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE,
 				PathContainer.parsePath("/testStylesheet.css"));
@@ -86,7 +85,7 @@ public class ResourceHandlerRegistryTests {
 		handler.handle(exchange).block(Duration.ofSeconds(5));
 
 		StepVerifier.create(exchange.getResponse().getBody())
-				.consumeNextWith(buf -> assertThat(DataBufferTestUtils.dumpString(buf, StandardCharsets.UTF_8)).isEqualTo("test stylesheet content"))
+				.consumeNextWith(buf -> assertThat(buf.toString(UTF_8)).isEqualTo("test stylesheet content"))
 				.expectComplete()
 				.verify();
 	}
@@ -115,7 +114,7 @@ public class ResourceHandlerRegistryTests {
 	}
 
 	@Test
-	public void resourceChain() throws Exception {
+	public void resourceChain() {
 		ResourceUrlProvider resourceUrlProvider = Mockito.mock(ResourceUrlProvider.class);
 		this.registry.setResourceUrlProvider(resourceUrlProvider);
 		ResourceResolver mockResolver = Mockito.mock(ResourceResolver.class);
@@ -141,7 +140,7 @@ public class ResourceHandlerRegistryTests {
 	}
 
 	@Test
-	public void resourceChainWithoutCaching() throws Exception {
+	public void resourceChainWithoutCaching() {
 		this.registration.resourceChain(false);
 
 		ResourceWebHandler handler = getHandler("/resources/**");
@@ -155,7 +154,7 @@ public class ResourceHandlerRegistryTests {
 	}
 
 	@Test
-	public void resourceChainWithVersionResolver() throws Exception {
+	public void resourceChainWithVersionResolver() {
 		VersionResourceResolver versionResolver = new VersionResourceResolver()
 				.addFixedVersionStrategy("fixed", "/**/*.js")
 				.addContentVersionStrategy("/**");
@@ -179,7 +178,7 @@ public class ResourceHandlerRegistryTests {
 	}
 
 	@Test
-	public void resourceChainWithOverrides() throws Exception {
+	public void resourceChainWithOverrides() {
 		CachingResourceResolver cachingResolver = Mockito.mock(CachingResourceResolver.class);
 		VersionResourceResolver versionResolver = Mockito.mock(VersionResourceResolver.class);
 		WebJarsResourceResolver webjarsResolver = Mockito.mock(WebJarsResourceResolver.class);

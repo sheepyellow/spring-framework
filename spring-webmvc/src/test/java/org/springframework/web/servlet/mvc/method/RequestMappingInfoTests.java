@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,16 +44,35 @@ public class RequestMappingInfoTests {
 
 	@Test
 	public void createEmpty() {
+
 		RequestMappingInfo info = paths().build();
 
 		// gh-22543
 		assertThat(info.getPatternsCondition().getPatterns()).isEqualTo(Collections.singleton(""));
 		assertThat(info.getMethodsCondition().getMethods().size()).isEqualTo(0);
-		assertThat(info.getConsumesCondition().isEmpty()).isEqualTo(true);
-		assertThat(info.getProducesCondition().isEmpty()).isEqualTo(true);
 		assertThat(info.getParamsCondition()).isNotNull();
 		assertThat(info.getHeadersCondition()).isNotNull();
+		assertThat(info.getConsumesCondition().isEmpty()).isEqualTo(true);
+		assertThat(info.getProducesCondition().isEmpty()).isEqualTo(true);
 		assertThat(info.getCustomCondition()).isNull();
+
+		RequestMappingInfo anotherInfo = paths().build();
+		assertThat(info.getPatternsCondition()).isSameAs(anotherInfo.getPatternsCondition());
+		assertThat(info.getMethodsCondition()).isSameAs(anotherInfo.getMethodsCondition());
+		assertThat(info.getParamsCondition()).isSameAs(anotherInfo.getParamsCondition());
+		assertThat(info.getHeadersCondition()).isSameAs(anotherInfo.getHeadersCondition());
+		assertThat(info.getConsumesCondition()).isSameAs(anotherInfo.getConsumesCondition());
+		assertThat(info.getProducesCondition()).isSameAs(anotherInfo.getProducesCondition());
+		assertThat(info.getCustomCondition()).isSameAs(anotherInfo.getCustomCondition());
+
+		RequestMappingInfo result = info.combine(anotherInfo);
+		assertThat(info.getPatternsCondition()).isSameAs(result.getPatternsCondition());
+		assertThat(info.getMethodsCondition()).isSameAs(result.getMethodsCondition());
+		assertThat(info.getParamsCondition()).isSameAs(result.getParamsCondition());
+		assertThat(info.getHeadersCondition()).isSameAs(result.getHeadersCondition());
+		assertThat(info.getConsumesCondition()).isSameAs(result.getConsumesCondition());
+		assertThat(info.getProducesCondition()).isSameAs(result.getProducesCondition());
+		assertThat(info.getCustomCondition()).isSameAs(result.getCustomCondition());
 	}
 
 	@Test
@@ -211,7 +230,7 @@ public class RequestMappingInfoTests {
 				.build();
 
 		assertThat(info1.equals(info2)).isFalse();
-		assertThat(info2.hashCode()).isNotEqualTo((long) info1.hashCode());
+		assertThat(info2.hashCode()).isNotEqualTo(info1.hashCode());
 
 		info2 = paths("/foo").methods(GET, RequestMethod.POST)
 				.params("foo=bar", "customFoo=customBar").headers("foo=bar")
@@ -219,7 +238,7 @@ public class RequestMappingInfoTests {
 				.build();
 
 		assertThat(info1.equals(info2)).isFalse();
-		assertThat(info2.hashCode()).isNotEqualTo((long) info1.hashCode());
+		assertThat(info2.hashCode()).isNotEqualTo(info1.hashCode());
 
 		info2 = paths("/foo").methods(GET)
 				.params("/NOOOOOO", "customFoo=customBar").headers("foo=bar")
@@ -227,7 +246,7 @@ public class RequestMappingInfoTests {
 				.build();
 
 		assertThat(info1.equals(info2)).isFalse();
-		assertThat(info2.hashCode()).isNotEqualTo((long) info1.hashCode());
+		assertThat(info2.hashCode()).isNotEqualTo(info1.hashCode());
 
 		info2 = paths("/foo").methods(GET)
 				.params("foo=bar", "customFoo=customBar").headers("/NOOOOOO")
@@ -235,7 +254,7 @@ public class RequestMappingInfoTests {
 				.build();
 
 		assertThat(info1.equals(info2)).isFalse();
-		assertThat(info2.hashCode()).isNotEqualTo((long) info1.hashCode());
+		assertThat(info2.hashCode()).isNotEqualTo(info1.hashCode());
 
 		info2 = paths("/foo").methods(GET)
 				.params("foo=bar", "customFoo=customBar").headers("foo=bar")
@@ -243,7 +262,7 @@ public class RequestMappingInfoTests {
 				.build();
 
 		assertThat(info1.equals(info2)).isFalse();
-		assertThat(info2.hashCode()).isNotEqualTo((long) info1.hashCode());
+		assertThat(info2.hashCode()).isNotEqualTo(info1.hashCode());
 
 		info2 = paths("/foo").methods(GET)
 				.params("foo=bar", "customFoo=customBar").headers("foo=bar")
@@ -251,7 +270,7 @@ public class RequestMappingInfoTests {
 				.build();
 
 		assertThat(info1.equals(info2)).isFalse();
-		assertThat(info2.hashCode()).isNotEqualTo((long) info1.hashCode());
+		assertThat(info2.hashCode()).isNotEqualTo(info1.hashCode());
 
 		info2 = paths("/foo").methods(GET)
 				.params("foo=bar", "customFoo=NOOOOOO").headers("foo=bar")
@@ -259,7 +278,7 @@ public class RequestMappingInfoTests {
 				.build();
 
 		assertThat(info1.equals(info2)).isFalse();
-		assertThat(info2.hashCode()).isNotEqualTo((long) info1.hashCode());
+		assertThat(info2.hashCode()).isNotEqualTo(info1.hashCode());
 	}
 
 	@Test

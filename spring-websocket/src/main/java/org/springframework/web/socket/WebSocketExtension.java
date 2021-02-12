@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2018 the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -103,7 +103,7 @@ public class WebSocketExtension {
 		if (this == other) {
 			return true;
 		}
-		if (other == null || getClass() != other.getClass()) {
+		if (other == null || !WebSocketExtension.class.isAssignableFrom(other.getClass())) {
 			return false;
 		}
 		WebSocketExtension otherExt = (WebSocketExtension) other;
@@ -160,7 +160,7 @@ public class WebSocketExtension {
 				int eqIndex = parameter.indexOf('=');
 				if (eqIndex != -1) {
 					String attribute = parameter.substring(0, eqIndex);
-					String value = parameter.substring(eqIndex + 1, parameter.length());
+					String value = parameter.substring(eqIndex + 1);
 					parameters.put(attribute, value);
 				}
 			}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -108,12 +108,11 @@ public class PathPatternParserTests {
 		assertThat(pp2).isEqualTo(pp1);
 		assertThat(pp2.hashCode()).isEqualTo(pp1.hashCode());
 		assertThat(pp3).isNotEqualTo(pp1);
-		assertThat(pp1.equals("abc")).isFalse();
 
 		pp1 = caseInsensitiveParser.parse("/abc");
 		pp2 = caseSensitiveParser.parse("/abc");
 		assertThat(pp1.equals(pp2)).isFalse();
-		assertThat(pp2.hashCode()).isNotEqualTo((long) pp1.hashCode());
+		assertThat(pp2.hashCode()).isNotEqualTo(pp1.hashCode());
 	}
 
 	@Test
@@ -412,6 +411,14 @@ public class PathPatternParserTests {
 		Collections.sort(patterns);
 		assertThat(patterns.get(0)).isEqualTo(p3);
 		assertThat(patterns.get(1)).isEqualTo(p2);
+	}
+
+	@Test // Should be updated with gh-24952
+	public void doubleWildcardWithinPatternNotSupported() {
+		PathPatternParser parser = new PathPatternParser();
+		PathPattern pattern = parser.parse("/resources/**/details");
+		assertThat(pattern.matches(PathContainer.parsePath("/resources/test/details"))).isTrue();
+		assertThat(pattern.matches(PathContainer.parsePath("/resources/projects/spring/details"))).isFalse();
 	}
 
 	@Test

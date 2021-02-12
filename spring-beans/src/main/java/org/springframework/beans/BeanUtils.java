@@ -38,6 +38,7 @@ import kotlin.jvm.JvmClassMappingKt;
 import kotlin.reflect.KFunction;
 import kotlin.reflect.KParameter;
 import kotlin.reflect.full.KClasses;
+import kotlin.reflect.jvm.KCallablesJvm;
 import kotlin.reflect.jvm.ReflectJvmMapping;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -200,6 +201,7 @@ public abstract class BeanUtils {
 						argsWithDefaultValues[i] = args[i];
 					}
 				}
+				// 使用构造函数创建对象
 				return ctor.newInstance(argsWithDefaultValues);
 			}
 		}
@@ -226,7 +228,6 @@ public abstract class BeanUtils {
 	 * @since 5.0
 	 * @see <a href="https://kotlinlang.org/docs/reference/classes.html#constructors">Kotlin docs</a>
 	 */
-	@SuppressWarnings("unchecked")
 	@Nullable
 	public static <T> Constructor<T> findPrimaryConstructor(Class<T> clazz) {
 		Assert.notNull(clazz, "Class must not be null");
@@ -441,8 +442,7 @@ public abstract class BeanUtils {
 	 * @throws BeansException if PropertyDescriptor look fails
 	 */
 	public static PropertyDescriptor[] getPropertyDescriptors(Class<?> clazz) throws BeansException {
-		CachedIntrospectionResults cr = CachedIntrospectionResults.forClass(clazz);
-		return cr.getPropertyDescriptors();
+		return CachedIntrospectionResults.forClass(clazz).getPropertyDescriptors();
 	}
 
 	/**
@@ -453,11 +453,8 @@ public abstract class BeanUtils {
 	 * @throws BeansException if PropertyDescriptor lookup fails
 	 */
 	@Nullable
-	public static PropertyDescriptor getPropertyDescriptor(Class<?> clazz, String propertyName)
-			throws BeansException {
-
-		CachedIntrospectionResults cr = CachedIntrospectionResults.forClass(clazz);
-		return cr.getPropertyDescriptor(propertyName);
+	public static PropertyDescriptor getPropertyDescriptor(Class<?> clazz, String propertyName) throws BeansException {
+		return CachedIntrospectionResults.forClass(clazz).getPropertyDescriptor(propertyName);
 	}
 
 	/**
@@ -510,6 +507,7 @@ public abstract class BeanUtils {
 		if (targetType == null || targetType.isArray() || unknownEditorTypes.contains(targetType)) {
 			return null;
 		}
+
 		ClassLoader cl = targetType.getClassLoader();
 		if (cl == null) {
 			try {
@@ -526,28 +524,34 @@ public abstract class BeanUtils {
 				return null;
 			}
 		}
+
 		String targetTypeName = targetType.getName();
 		String editorName = targetTypeName + "Editor";
 		try {
 			Class<?> editorClass = cl.loadClass(editorName);
-			if (!PropertyEditor.class.isAssignableFrom(editorClass)) {
-				if (logger.isInfoEnabled()) {
-					logger.info("Editor class [" + editorName +
-							"] does not implement [java.beans.PropertyEditor] interface");
+			if (editorClass != null) {
+				if (!PropertyEditor.class.isAssignableFrom(editorClass)) {
+					if (logger.isInfoEnabled()) {
+						logger.info("Editor class [" + editorName +
+								"] does not implement [java.beans.PropertyEditor] interface");
+					}
+					unknownEditorTypes.add(targetType);
+					return null;
 				}
-				unknownEditorTypes.add(targetType);
-				return null;
+				return (PropertyEditor) instantiateClass(editorClass);
 			}
-			return (PropertyEditor) instantiateClass(editorClass);
+			// Misbehaving ClassLoader returned null instead of ClassNotFoundException
+			// - fall back to unknown editor type registration below
 		}
 		catch (ClassNotFoundException ex) {
-			if (logger.isTraceEnabled()) {
-				logger.trace("No property editor [" + editorName + "] found for type " +
-						targetTypeName + " according to 'Editor' suffix convention");
-			}
-			unknownEditorTypes.add(targetType);
-			return null;
+			// Ignore - fall back to unknown editor type registration below
 		}
+		if (logger.isTraceEnabled()) {
+			logger.trace("No property editor [" + editorName + "] found for type " +
+					targetTypeName + " according to 'Editor' suffix convention");
+		}
+		unknownEditorTypes.add(targetType);
+		return null;
 	}
 
 	/**
@@ -780,6 +784,11 @@ public abstract class BeanUtils {
 			if (kotlinConstructor == null) {
 				return ctor.newInstance(args);
 			}
+
+			if ((!Modifier.isPublic(ctor.getModifiers()) || !Modifier.isPublic(ctor.getDeclaringClass().getModifiers()))) {
+				KCallablesJvm.setAccessible(kotlinConstructor, true);
+			}
+
 			List<KParameter> parameters = kotlinConstructor.getParameters();
 			Map<KParameter, Object> argParameters = new HashMap<>(parameters.size());
 			Assert.isTrue(args.length <= parameters.size(),

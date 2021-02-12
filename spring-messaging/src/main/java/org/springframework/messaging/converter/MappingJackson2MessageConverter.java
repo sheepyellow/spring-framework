@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,6 +41,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.MimeType;
 
 /**
@@ -139,6 +140,7 @@ public class MappingJackson2MessageConverter extends AbstractMessageConverter {
 		}
 	}
 
+
 	@Override
 	protected boolean canConvertFrom(Message<?> message, @Nullable Class<?> targetClass) {
 		if (targetClass == null || !supportsMimeType(message.getHeaders())) {
@@ -209,9 +211,11 @@ public class MappingJackson2MessageConverter extends AbstractMessageConverter {
 		JavaType javaType = getJavaType(targetClass, conversionHint);
 		Object payload = message.getPayload();
 		Class<?> view = getSerializationView(conversionHint);
-		// Note: in the view case, calling withType instead of forType for compatibility with Jackson <2.5
 		try {
-			if (payload instanceof byte[]) {
+			if (ClassUtils.isAssignableValue(targetClass, payload)) {
+				return payload;
+			}
+			else if (payload instanceof byte[]) {
 				if (view != null) {
 					return this.objectMapper.readerWithView(view).forType(javaType).readValue((byte[]) payload);
 				}
@@ -219,10 +223,8 @@ public class MappingJackson2MessageConverter extends AbstractMessageConverter {
 					return this.objectMapper.readValue((byte[]) payload, javaType);
 				}
 			}
-			else if (targetClass.isInstance(payload)) {
-				return payload;
-			}
 			else {
+				// Assuming a text-based source payload
 				if (view != null) {
 					return this.objectMapper.readerWithView(view).forType(javaType).readValue(payload.toString());
 				}
@@ -246,7 +248,7 @@ public class MappingJackson2MessageConverter extends AbstractMessageConverter {
 			Type genericParameterType = param.getNestedGenericParameterType();
 			Class<?> contextClass = param.getContainingClass();
 			Type type = GenericTypeResolver.resolveType(genericParameterType, contextClass);
-			return this.objectMapper.getTypeFactory().constructType(type);
+			return this.objectMapper.constructType(type);
 		}
 		return this.objectMapper.constructType(targetClass);
 	}
@@ -261,17 +263,19 @@ public class MappingJackson2MessageConverter extends AbstractMessageConverter {
 			if (byte[].class == getSerializedPayloadClass()) {
 				ByteArrayOutputStream out = new ByteArrayOutputStream(1024);
 				JsonEncoding encoding = getJsonEncoding(getMimeType(headers));
-				JsonGenerator generator = this.objectMapper.getFactory().createGenerator(out, encoding);
-				if (view != null) {
-					this.objectMapper.writerWithView(view).writeValue(generator, payload);
+				try (JsonGenerator generator = this.objectMapper.getFactory().createGenerator(out, encoding)) {
+					if (view != null) {
+						this.objectMapper.writerWithView(view).writeValue(generator, payload);
+					}
+					else {
+						this.objectMapper.writeValue(generator, payload);
+					}
+					payload = out.toByteArray();
 				}
-				else {
-					this.objectMapper.writeValue(generator, payload);
-				}
-				payload = out.toByteArray();
 			}
 			else {
-				Writer writer = new StringWriter();
+				// Assuming a text-based target payload
+				Writer writer = new StringWriter(1024);
 				if (view != null) {
 					this.objectMapper.writerWithView(view).writeValue(writer, payload);
 				}
@@ -330,7 +334,7 @@ public class MappingJackson2MessageConverter extends AbstractMessageConverter {
 	 * @return the JSON encoding to use (never {@code null})
 	 */
 	protected JsonEncoding getJsonEncoding(@Nullable MimeType contentType) {
-		if (contentType != null && (contentType.getCharset() != null)) {
+		if (contentType != null && contentType.getCharset() != null) {
 			Charset charset = contentType.getCharset();
 			for (JsonEncoding encoding : JsonEncoding.values()) {
 				if (charset.name().equals(encoding.getJavaName())) {

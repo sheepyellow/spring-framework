@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,6 +66,7 @@ import org.springframework.util.StringUtils;
 
 /**
  * Delegate for resolving constructors and factory methods.
+ *
  * <p>Performs constructor resolution through argument matching.
  *
  * @author Juergen Hoeller
@@ -84,7 +85,7 @@ class ConstructorResolver {
 	private static final Object[] EMPTY_ARGS = new Object[0];
 
 	/**
-	 * Marker for autowired arguments in a cached argument array, to be later replaced
+	 * Marker for autowired arguments in a cached argument array, to be replaced
 	 * by a {@linkplain #resolveAutowiredArgument resolved autowired argument}.
 	 */
 	private static final Object autowiredArgumentMarker = new Object();
@@ -148,7 +149,7 @@ class ConstructorResolver {
 				}
 			}
 			if (argsToResolve != null) {
-				argsToUse = resolvePreparedArguments(beanName, mbd, bw, constructorToUse, argsToResolve, true);
+				argsToUse = resolvePreparedArguments(beanName, mbd, bw, constructorToUse, argsToResolve);
 			}
 		}
 
@@ -202,7 +203,6 @@ class ConstructorResolver {
 			LinkedList<UnsatisfiedDependencyException> causes = null;
 
 			for (Constructor<?> candidate : candidates) {
-
 				int parameterCount = candidate.getParameterCount();
 
 				if (constructorToUse != null && argsToUse != null && argsToUse.length > parameterCount) {
@@ -410,6 +410,7 @@ class ConstructorResolver {
 			if (mbd.isSingleton() && this.beanFactory.containsSingleton(beanName)) {
 				throw new ImplicitlyAppearedSingletonException();
 			}
+			this.beanFactory.registerDependentBean(factoryBeanName, beanName);
 			factoryClass = factoryBean.getClass();
 			isStatic = false;
 		}
@@ -444,7 +445,7 @@ class ConstructorResolver {
 				}
 			}
 			if (argsToResolve != null) {
-				argsToUse = resolvePreparedArguments(beanName, mbd, bw, factoryMethodToUse, argsToResolve, true);
+				argsToUse = resolvePreparedArguments(beanName, mbd, bw, factoryMethodToUse, argsToResolve);
 			}
 		}
 
@@ -515,8 +516,8 @@ class ConstructorResolver {
 			LinkedList<UnsatisfiedDependencyException> causes = null;
 
 			for (Method candidate : candidates) {
-
 				int parameterCount = candidate.getParameterCount();
+
 				if (parameterCount >= minNrOfArgs) {
 					ArgumentsHolder argsHolder;
 
@@ -679,7 +680,7 @@ class ConstructorResolver {
 				throw new BeanCreationException(mbd.getResourceDescription(), beanName,
 						"Invalid constructor argument index: " + index);
 			}
-			if (index > minNrOfArgs) {
+			if (index + 1 > minNrOfArgs) {
 				minNrOfArgs = index + 1;
 			}
 			ConstructorArgumentValues.ValueHolder valueHolder = entry.getValue();
@@ -816,7 +817,7 @@ class ConstructorResolver {
 	 * Resolve the prepared arguments stored in the given bean definition.
 	 */
 	private Object[] resolvePreparedArguments(String beanName, RootBeanDefinition mbd, BeanWrapper bw,
-			Executable executable, Object[] argsToResolve, boolean fallback) {
+			Executable executable, Object[] argsToResolve) {
 
 		TypeConverter customConverter = this.beanFactory.getCustomTypeConverter();
 		TypeConverter converter = (customConverter != null ? customConverter : bw);
@@ -829,7 +830,7 @@ class ConstructorResolver {
 			Object argValue = argsToResolve[argIndex];
 			MethodParameter methodParam = MethodParameter.forExecutable(executable, argIndex);
 			if (argValue == autowiredArgumentMarker) {
-				argValue = resolveAutowiredArgument(methodParam, beanName, null, converter, fallback);
+				argValue = resolveAutowiredArgument(methodParam, beanName, null, converter, true);
 			}
 			else if (argValue instanceof BeanMetadataElement) {
 				argValue = valueResolver.resolveValueIfNecessary("constructor argument", argValue);

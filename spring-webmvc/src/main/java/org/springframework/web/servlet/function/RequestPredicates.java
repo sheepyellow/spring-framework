@@ -71,9 +71,6 @@ public abstract class RequestPredicates {
 
 	private static final Log logger = LogFactory.getLog(RequestPredicates.class);
 
-	private static final PathPatternParser DEFAULT_PATTERN_PARSER = new PathPatternParser();
-
-
 	/**
 	 * Return a {@code RequestPredicate} that always matches.
 	 * @return a predicate that always matches
@@ -113,7 +110,7 @@ public abstract class RequestPredicates {
 		if (!pattern.isEmpty() && !pattern.startsWith("/")) {
 			pattern = "/" + pattern;
 		}
-		return pathPredicates(DEFAULT_PATTERN_PARSER).apply(pattern);
+		return pathPredicates(PathPatternParser.defaultInstance).apply(pattern);
 	}
 
 	/**
@@ -278,7 +275,7 @@ public abstract class RequestPredicates {
 	 * Return a {@code RequestPredicate} that tests the request's parameter of the given name
 	 * against the given predicate.
 	 * @param name the name of the parameter to test against
-	 * @param predicate predicate to test against the parameter value
+	 * @param predicate the predicate to test against the parameter value
 	 * @return a predicate that matches the given predicate against the parameter of the given name
 	 * @see ServerRequest#param(String)
 	 */

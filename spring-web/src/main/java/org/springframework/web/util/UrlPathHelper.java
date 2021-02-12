@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
@@ -70,6 +71,8 @@ public class UrlPathHelper {
 
 	private String defaultEncoding = WebUtils.DEFAULT_CHARACTER_ENCODING;
 
+	private boolean readOnly = false;
+
 
 	/**
 	 * Whether URL lookups should always use the full path within the current
@@ -81,6 +84,7 @@ public class UrlPathHelper {
 	 * <p>By default this is set to "false".
 	 */
 	public void setAlwaysUseFullPath(boolean alwaysUseFullPath) {
+		checkReadOnly();
 		this.alwaysUseFullPath = alwaysUseFullPath;
 	}
 
@@ -103,6 +107,7 @@ public class UrlPathHelper {
 	 * @see java.net.URLDecoder#decode(String, String)
 	 */
 	public void setUrlDecode(boolean urlDecode) {
+		checkReadOnly();
 		this.urlDecode = urlDecode;
 	}
 
@@ -119,6 +124,7 @@ public class UrlPathHelper {
 	 * <p>Default is "true".
 	 */
 	public void setRemoveSemicolonContent(boolean removeSemicolonContent) {
+		checkReadOnly();
 		this.removeSemicolonContent = removeSemicolonContent;
 	}
 
@@ -126,6 +132,7 @@ public class UrlPathHelper {
 	 * Whether configured to remove ";" (semicolon) content from the request URI.
 	 */
 	public boolean shouldRemoveSemicolonContent() {
+		checkReadOnly();
 		return this.removeSemicolonContent;
 	}
 
@@ -143,6 +150,7 @@ public class UrlPathHelper {
 	 * @see WebUtils#DEFAULT_CHARACTER_ENCODING
 	 */
 	public void setDefaultEncoding(String defaultEncoding) {
+		checkReadOnly();
 		this.defaultEncoding = defaultEncoding;
 	}
 
@@ -151,6 +159,17 @@ public class UrlPathHelper {
 	 */
 	protected String getDefaultEncoding() {
 		return this.defaultEncoding;
+	}
+
+	/**
+	 * Switch to read-only mode where further configuration changes are not allowed.
+	 */
+	private void setReadOnly() {
+		this.readOnly = true;
+	}
+
+	private void checkReadOnly() {
+		Assert.isTrue(!this.readOnly, "This instance cannot be modified");
 	}
 
 
@@ -164,17 +183,18 @@ public class UrlPathHelper {
 	 * @see #getPathWithinApplication
 	 */
 	public String getLookupPathForRequest(HttpServletRequest request) {
+		String pathWithinApp = getPathWithinApplication(request);
 		// Always use full path within current servlet context?
 		if (this.alwaysUseFullPath) {
-			return getPathWithinApplication(request);
+			return pathWithinApp;
 		}
 		// Else, use path within current servlet mapping if applicable
-		String rest = getPathWithinServletMapping(request);
-		if (!"".equals(rest)) {
+		String rest = getPathWithinServletMapping(request, pathWithinApp);
+		if (StringUtils.hasLength(rest)) {
 			return rest;
 		}
 		else {
-			return getPathWithinApplication(request);
+			return pathWithinApp;
 		}
 	}
 
@@ -202,6 +222,18 @@ public class UrlPathHelper {
 	 * Return the path within the servlet mapping for the given request,
 	 * i.e. the part of the request's URL beyond the part that called the servlet,
 	 * or "" if the whole URL has been used to identify the servlet.
+	 * @param request current HTTP request
+	 * @return the path within the servlet mapping, or ""
+	 * @see #getPathWithinServletMapping(HttpServletRequest, String)
+	 */
+	public String getPathWithinServletMapping(HttpServletRequest request) {
+		return getPathWithinServletMapping(request, getPathWithinApplication(request));
+	}
+
+	/**
+	 * Return the path within the servlet mapping for the given request,
+	 * i.e. the part of the request's URL beyond the part that called the servlet,
+	 * or "" if the whole URL has been used to identify the servlet.
 	 * <p>Detects include request URL if called within a RequestDispatcher include.
 	 * <p>E.g.: servlet mapping = "/*"; request URI = "/test/a" -> "/test/a".
 	 * <p>E.g.: servlet mapping = "/"; request URI = "/test/a" -> "/test/a".
@@ -209,11 +241,12 @@ public class UrlPathHelper {
 	 * <p>E.g.: servlet mapping = "/test"; request URI = "/test" -> "".
 	 * <p>E.g.: servlet mapping = "/*.test"; request URI = "/a.test" -> "".
 	 * @param request current HTTP request
+	 * @param pathWithinApp a precomputed path within the application
 	 * @return the path within the servlet mapping, or ""
+	 * @since 5.2.9
 	 * @see #getLookupPathForRequest
 	 */
-	public String getPathWithinServletMapping(HttpServletRequest request) {
-		String pathWithinApp = getPathWithinApplication(request);
+	protected String getPathWithinServletMapping(HttpServletRequest request, String pathWithinApp) {
 		String servletPath = getServletPath(request);
 		String sanitizedPathWithinApp = getSanitizedPath(pathWithinApp);
 		String path;
@@ -362,7 +395,7 @@ public class UrlPathHelper {
 		if (contextPath == null) {
 			contextPath = request.getContextPath();
 		}
-		if ("/".equals(contextPath)) {
+		if (StringUtils.matchesCharacter(contextPath, '/')) {
 			// Invalid case, but happens for includes on Jetty: silently adapt it.
 			contextPath = "";
 		}
@@ -539,13 +572,19 @@ public class UrlPathHelper {
 	}
 
 	private String removeJsessionid(String requestUri) {
-		int startIndex = requestUri.toLowerCase().indexOf(";jsessionid=");
-		if (startIndex != -1) {
-			int endIndex = requestUri.indexOf(';', startIndex + 12);
-			String start = requestUri.substring(0, startIndex);
-			requestUri = (endIndex != -1) ? start + requestUri.substring(endIndex) : start;
+		String key = ";jsessionid=";
+		int index = requestUri.toLowerCase().indexOf(key);
+		if (index == -1) {
+			return requestUri;
 		}
-		return requestUri;
+		String start = requestUri.substring(0, index);
+		for (int i = index + key.length(); i < requestUri.length(); i++) {
+			char c = requestUri.charAt(i);
+			if (c == ';' || c == '/') {
+				return start + requestUri.substring(i);
+			}
+		}
+		return start;
 	}
 
 	/**
@@ -624,6 +663,48 @@ public class UrlPathHelper {
 		// Don't bother if WebSphere is configured to be fully Servlet compliant.
 		// However, if it is not compliant, do remove the improper trailing slash!
 		return !flagToUse;
+	}
+
+
+
+	/**
+	 * Shared, read-only instance with defaults. The following apply:
+	 * <ul>
+	 * <li>{@code alwaysUseFullPath=false}
+	 * <li>{@code urlDecode=true}
+	 * <li>{@code removeSemicolon=true}
+	 * <li>{@code defaultEncoding=}{@link WebUtils#DEFAULT_CHARACTER_ENCODING}
+	 * </ul>
+	 */
+	public static final UrlPathHelper defaultInstance = new UrlPathHelper();
+
+	static {
+		defaultInstance.setReadOnly();
+	}
+
+
+	/**
+	 * Shared, read-only instance for the full, encoded path. The following apply:
+	 * <ul>
+	 * <li>{@code alwaysUseFullPath=true}
+	 * <li>{@code urlDecode=false}
+	 * <li>{@code removeSemicolon=false}
+	 * <li>{@code defaultEncoding=}{@link WebUtils#DEFAULT_CHARACTER_ENCODING}
+	 * </ul>
+	 */
+	public static final UrlPathHelper rawPathInstance = new UrlPathHelper() {
+
+		@Override
+		public String removeSemicolonContent(String requestUri) {
+			return requestUri;
+		}
+	};
+
+	static {
+		rawPathInstance.setAlwaysUseFullPath(true);
+		rawPathInstance.setUrlDecode(false);
+		rawPathInstance.setRemoveSemicolonContent(false);
+		rawPathInstance.setReadOnly();
 	}
 
 }

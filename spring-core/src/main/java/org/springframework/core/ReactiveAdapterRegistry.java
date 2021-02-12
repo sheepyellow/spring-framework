@@ -218,7 +218,7 @@ public class ReactiveAdapterRegistry {
 					source -> source);
 
 			registry.registerReactiveType(
-					ReactiveTypeDescriptor.singleOptionalValue(CompletionStage.class, EmptyCompletableFuture::new),
+					ReactiveTypeDescriptor.nonDeferredAsyncValue(CompletionStage.class, EmptyCompletableFuture::new),
 					source -> Mono.fromCompletionStage((CompletionStage<?>) source),
 					source -> Mono.from(source).toFuture()
 			);
@@ -361,7 +361,7 @@ public class ReactiveAdapterRegistry {
 
 	/**
 	 * {@code BlockHoundIntegration} for spring-core classes.
-	 * <p>Whitelists the following:
+	 * <p>Explicitly allow the following:
 	 * <ul>
 	 * <li>Reading class info via {@link LocalVariableTableParameterNameDiscoverer}.
 	 * <li>Locking within {@link ConcurrentReferenceHashMap}.

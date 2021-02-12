@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2018 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -192,14 +192,6 @@ public final class WebHttpHandlerBuilder {
 		}
 
 		try {
-			builder.localeContextResolver(
-					context.getBean(LOCALE_CONTEXT_RESOLVER_BEAN_NAME, LocaleContextResolver.class));
-		}
-		catch (NoSuchBeanDefinitionException ex) {
-			// Fall back on default
-		}
-
-		try {
 			builder.forwardedHeaderTransformer(
 					context.getBean(FORWARDED_HEADER_TRANSFORMER_BEAN_NAME, ForwardedHeaderTransformer.class));
 		}
@@ -234,7 +226,6 @@ public final class WebHttpHandlerBuilder {
 	}
 
 	private void updateFilters() {
-
 		if (this.filters.isEmpty()) {
 			return;
 		}
@@ -357,7 +348,6 @@ public final class WebHttpHandlerBuilder {
 	 * Build the {@link HttpHandler}.
 	 */
 	public HttpHandler build() {
-
 		WebHandler decorated = new FilteringWebHandler(this.webHandler, this.filters);
 		decorated = new ExceptionHandlingWebHandler(decorated,  this.exceptionHandlers);
 

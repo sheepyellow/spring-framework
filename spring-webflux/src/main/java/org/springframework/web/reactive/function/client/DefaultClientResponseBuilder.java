@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.client.reactive.ClientHttpResponse;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.LinkedMultiValueMap;
@@ -75,6 +76,9 @@ final class DefaultClientResponseBuilder implements ClientResponse.Builder {
 
 	private Flux<DataBuffer> body = Flux.empty();
 
+	@Nullable
+	private ClientResponse originalResponse;
+
 	private HttpRequest request;
 
 
@@ -88,14 +92,11 @@ final class DefaultClientResponseBuilder implements ClientResponse.Builder {
 		Assert.notNull(other, "ClientResponse must not be null");
 		this.strategies = other.strategies();
 		this.statusCode = other.rawStatusCode();
-		headers(headers -> headers.addAll(other.headers().asHttpHeaders()));
-		cookies(cookies -> cookies.addAll(other.cookies()));
-		if (other instanceof DefaultClientResponse) {
-			this.request = ((DefaultClientResponse) other).request();
-		}
-		else {
-			this.request = EMPTY_REQUEST;
-		}
+		this.headers.addAll(other.headers().asHttpHeaders());
+		this.cookies.addAll(other.cookies());
+		this.originalResponse = other;
+		this.request = (other instanceof DefaultClientResponse ?
+				((DefaultClientResponse) other).request() : EMPTY_REQUEST);
 	}
 
 
@@ -178,7 +179,10 @@ final class DefaultClientResponseBuilder implements ClientResponse.Builder {
 
 		// When building ClientResponse manually, the ClientRequest.logPrefix() has to be passed,
 		// e.g. via ClientResponse.Builder, but this (builder) is not used currently.
-		return new DefaultClientResponse(httpResponse, this.strategies, "", "", () -> this.request);
+		return new DefaultClientResponse(httpResponse, this.strategies,
+				this.originalResponse != null ? this.originalResponse.logPrefix() : "",
+				this.request.getMethodValue() + " " + this.request.getURI(),
+				() -> this.request);
 	}
 
 

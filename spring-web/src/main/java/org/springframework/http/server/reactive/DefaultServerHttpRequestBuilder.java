@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -71,6 +71,7 @@ class DefaultServerHttpRequestBuilder implements ServerHttpRequest.Builder {
 
 		this.uri = original.getURI();
 		this.httpMethodValue = original.getMethodValue();
+		this.contextPath = original.getPath().contextPath().value();
 		this.body = original.getBody();
 
 		this.httpHeaders = HttpHeaders.writableHttpHeaders(original.getHeaders());
@@ -211,20 +212,20 @@ class DefaultServerHttpRequestBuilder implements ServerHttpRequest.Builder {
 			return this.cookies;
 		}
 
-		@Nullable
 		@Override
-		public InetSocketAddress getRemoteAddress() {
-			return this.originalRequest.getRemoteAddress();
-		}
-
 		@Nullable
-		@Override
 		public InetSocketAddress getLocalAddress() {
 			return this.originalRequest.getLocalAddress();
 		}
 
-		@Nullable
 		@Override
+		@Nullable
+		public InetSocketAddress getRemoteAddress() {
+			return this.originalRequest.getRemoteAddress();
+		}
+
+		@Override
+		@Nullable
 		protected SslInfo initSslInfo() {
 			return this.sslInfo;
 		}
