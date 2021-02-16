@@ -47,6 +47,9 @@ import org.springframework.util.StringValueResolver;
  * @see org.springframework.beans.factory.BeanFactory
  * @see org.springframework.beans.factory.ListableBeanFactory
  * @see ConfigurableListableBeanFactory
+ * 扩充HierarchicalBeanFactory和SingletonBeanRegistry接口，提供对beanFactory的配置能力
+ * 该接口扩充的内容较多，比如类加载器、类型转换、属性编辑器，BeanPostProcessor
+ * 作用域，bean定义，处理bean依赖关系，合并其他ConfigurableBeanFactory，bean如何销毁等
  */
 public interface ConfigurableBeanFactory extends HierarchicalBeanFactory, SingletonBeanRegistry {
 
@@ -54,6 +57,7 @@ public interface ConfigurableBeanFactory extends HierarchicalBeanFactory, Single
 	 * Scope identifier for the standard singleton scope: {@value}.
 	 * <p>Custom scopes can be added via {@code registerScope}.
 	 * @see #registerScope
+	 * @deprecated 标准单例范围的范围识别符：“singleton”
 	 */
 	String SCOPE_SINGLETON = "singleton";
 
@@ -61,6 +65,7 @@ public interface ConfigurableBeanFactory extends HierarchicalBeanFactory, Single
 	 * Scope identifier for the standard prototype scope: {@value}.
 	 * <p>Custom scopes can be added via {@code registerScope}.
 	 * @see #registerScope
+	 * @deprecated 标准原型范围的范围标识符：“prototype”。
 	 */
 	String SCOPE_PROTOTYPE = "prototype";
 
@@ -73,6 +78,7 @@ public interface ConfigurableBeanFactory extends HierarchicalBeanFactory, Single
 	 * @throws IllegalStateException if this factory is already associated with
 	 * a parent BeanFactory
 	 * @see #getParentBeanFactory()
+	 * @deprecated 设置父工厂，注意不能更改父级工厂
 	 */
 	void setParentBeanFactory(BeanFactory parentBeanFactory) throws IllegalStateException;
 
@@ -85,6 +91,7 @@ public interface ConfigurableBeanFactory extends HierarchicalBeanFactory, Single
 	 * to be resolved once the factory processes the bean definition.
 	 * @param beanClassLoader the class loader to use,
 	 * or {@code null} to suggest the default class loader
+	 * @deprecated 设置类加载器以用于加载bean类。默认是线程上下文类加载器。
 	 */
 	void setBeanClassLoader(@Nullable ClassLoader beanClassLoader);
 

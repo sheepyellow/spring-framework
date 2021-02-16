@@ -53,6 +53,8 @@ import org.springframework.lang.Nullable;
  * ApplicationContext, to get access to an AutowireCapableBeanFactory:
  * simply cast the passed-in BeanFactory to AutowireCapableBeanFactory.
  *
+ * 扩展了BeanFactory接口，主要提供自动装配的能力
+ *
  * @author Juergen Hoeller
  * @since 04.12.2003
  * @see org.springframework.beans.factory.BeanFactoryAware
@@ -67,6 +69,7 @@ public interface AutowireCapableBeanFactory extends BeanFactory {
 	 * @see #createBean
 	 * @see #autowire
 	 * @see #autowireBeanProperties
+	 * 无自动装配
 	 */
 	int AUTOWIRE_NO = 0;
 
@@ -76,6 +79,7 @@ public interface AutowireCapableBeanFactory extends BeanFactory {
 	 * @see #createBean
 	 * @see #autowire
 	 * @see #autowireBeanProperties
+	 * by-name装配
 	 */
 	int AUTOWIRE_BY_NAME = 1;
 
@@ -85,6 +89,7 @@ public interface AutowireCapableBeanFactory extends BeanFactory {
 	 * @see #createBean
 	 * @see #autowire
 	 * @see #autowireBeanProperties
+	 * by-type装配
 	 */
 	int AUTOWIRE_BY_TYPE = 2;
 
@@ -93,6 +98,7 @@ public interface AutowireCapableBeanFactory extends BeanFactory {
 	 * can be satisfied (involves resolving the appropriate constructor).
 	 * @see #createBean
 	 * @see #autowire
+	 * 构造函数装配
 	 */
 	int AUTOWIRE_CONSTRUCTOR = 3;
 
@@ -103,6 +109,7 @@ public interface AutowireCapableBeanFactory extends BeanFactory {
 	 * @see #autowire
 	 * @deprecated as of Spring 3.0: If you are using mixed autowiring strategies,
 	 * prefer annotation-based autowiring for clearer demarcation of autowiring needs.
+	 * 自动装配，已被标记为过时
 	 */
 	@Deprecated
 	int AUTOWIRE_AUTODETECT = 4;
@@ -122,6 +129,7 @@ public interface AutowireCapableBeanFactory extends BeanFactory {
 
 	//-------------------------------------------------------------------------
 	// Typical methods for creating and populating external bean instances
+	// 创建和填充外部bean实例的典型方法
 	//-------------------------------------------------------------------------
 
 	/**
@@ -172,6 +180,7 @@ public interface AutowireCapableBeanFactory extends BeanFactory {
 
 	//-------------------------------------------------------------------------
 	// Specialized methods for fine-grained control over the bean lifecycle
+	// 用于细粒度控制bean生命周期的方法
 	//-------------------------------------------------------------------------
 
 	/**

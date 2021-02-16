@@ -154,6 +154,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 
 
 	static {
+		// 优先加载上下文关闭事件，来防止奇怪的类加载问题在应用程序关闭的时候
 		// Eagerly load the ContextClosedEvent class to avoid weird classloader issues
 		// on application shutdown in WebLogic 8.1. (Reported by Dustin Woods.)
 		ContextClosedEvent.class.getName();
@@ -163,7 +164,10 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	/** Logger used by this class. Available to subclasses. */
 	protected final Log logger = LogFactory.getLog(getClass());
 
-	/** Unique id for this context, if any. */
+	/**
+	 * 创建上下文的统一标识
+	 *  Unique id for this context, if any.
+	 *  */
 	private String id = ObjectUtils.identityToString(this);
 
 	/** Display name. */
@@ -177,19 +181,34 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	@Nullable
 	private ConfigurableEnvironment environment;
 
-	/** BeanFactoryPostProcessors to apply on refresh. */
+	/**
+	 * bean工厂后置处理器的集合
+	 * BeanFactoryPostProcessors to apply on refresh.
+	 * */
 	private final List<BeanFactoryPostProcessor> beanFactoryPostProcessors = new ArrayList<>();
 
 	/** System time in milliseconds when this context started. */
 	private long startupDate;
 
-	/** Flag that indicates whether this context is currently active. */
+	/**
+	 * 激活状态
+	 * 原子变量，线程安全
+	 * Flag that indicates whether this context is currently active.
+	 * */
 	private final AtomicBoolean active = new AtomicBoolean();
 
-	/** Flag that indicates whether this context has been closed already. */
+	/**
+	 * 关闭状态
+	 * 原子变量，线程安全
+	 * Flag that indicates whether this context has been closed already.
+	 * */
 	private final AtomicBoolean closed = new AtomicBoolean();
 
-	/** Synchronization monitor for the "refresh" and "destroy". */
+	/**
+	 * 锁
+	 * refresh和destory的同步监视器
+	 * Synchronization monitor for the "refresh" and "destroy".
+	 * */
 	private final Object startupShutdownMonitor = new Object();
 
 	/** Reference to the JVM shutdown hook, if registered. */
@@ -227,6 +246,8 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * Create a new AbstractApplicationContext with no parent.
 	 */
 	public AbstractApplicationContext() {
+		// 创建资源模式处理器
+		// 用来解析当前系统运行时所需要的一些资源，这些资源包括配置文件、xml文件等
 		this.resourcePatternResolver = getResourcePatternResolver();
 	}
 
@@ -456,6 +477,9 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * @see org.springframework.core.io.support.PathMatchingResourcePatternResolver
 	 */
 	protected ResourcePatternResolver getResourcePatternResolver() {
+		/**
+		 * 创建一个资源模式处理器（其实就是用来解析xml配置文件）
+		 */
 		return new PathMatchingResourcePatternResolver(this);
 	}
 

@@ -594,6 +594,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 						"' to allow for resolving potential circular references");
 			}
 			// 为了避免后期循环依赖，可以在bean初始化完成前将创建实例的ObjectFactory加入工厂
+			// 第二个参数是一个lamda表达式，此时这个lamda表达式不会执行，什么时候执行？需要到getBean的时候执行该lamda表达式
 			addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
 		}
 
@@ -1462,6 +1463,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		if (pvs != null) {
+			// 开始填充属性值
 			applyPropertyValues(beanName, mbd, bw, pvs);
 		}
 	}

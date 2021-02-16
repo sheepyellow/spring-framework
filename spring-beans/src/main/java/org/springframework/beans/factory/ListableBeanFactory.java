@@ -49,6 +49,10 @@ import org.springframework.lang.Nullable;
  * and {@code containsBeanDefinition}, the methods in this interface
  * are not designed for frequent invocation. Implementations may be slow.
  *
+ * 扩展了BeanFactory接口，提供了对bean的枚举功能
+ * 即可以返回bean的实例集合，而不用像BeanFactory只能返回单个bean的实例
+ * 注意:如果存在父容器的话该接口不会考虑父容器中的bean,只会返回当前容器中的bean
+ *
  * @author Rod Johnson
  * @author Juergen Hoeller
  * @since 16 April 2001
