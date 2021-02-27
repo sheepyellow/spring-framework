@@ -64,3 +64,29 @@ bean默认对象和代理对象都是单例的，那么在整个bean生命周期
 - 一级缓存放成品对象
 - 二级缓存放半成品对象
 - 三级缓存放lamda表达式，来完成代理对象的覆盖过程
+
+## IOC
+
+### Spring提供的IOC容器实现的两种方式（两个接口）
+- BeanFactory接口：IOC容器基本实现是Spring内部接口的使用接口，不提供给开发人员进行使用（加载配置文件时候不会创建对象，在获取对象时才会创建对象。）
+
+- ApplicationContext接口：BeanFactory接口的子接口，提供更多更强大的功能，提供给开发人员使用（加载配置文件时候就会把在配置文件对象进行创建）推荐使用！
+
+### ApplicationContext的两个重要的实现类
+
+#### ClassPathXmlApplicationContext
+
+#### FileSystemXmlApplicationContext
+
+## spring webflux
+
+Spring WebFlux是基于Reactor，默认容器是Netty高性能异步IO的框架。
+
+### Flux 和 Mono
+
+#### Flux
+
+##### flatmap与concatmap之间的区别
+
+concatMap类似for循环一样遍历处理元素，一个元素处理慢了，后面元素就得等着前面处理完，而flatMap则是并行处理，返回的元素是无序的，谁先处理完谁排放出去
+
