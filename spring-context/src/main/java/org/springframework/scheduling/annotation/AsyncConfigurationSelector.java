@@ -21,6 +21,10 @@ import org.springframework.context.annotation.AdviceModeImportSelector;
 import org.springframework.lang.Nullable;
 
 /**
+ * 查询器：基于@EanableAsync中定义的模式AdviceMode加在@Configuration标记的类上，确定抽象异步配置类的实现类
+ */
+
+/**
  * Selects which implementation of {@link AbstractAsyncConfiguration} should
  * be used based on the value of {@link EnableAsync#mode} on the importing
  * {@code @Configuration} class.

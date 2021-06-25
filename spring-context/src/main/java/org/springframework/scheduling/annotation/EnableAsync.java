@@ -29,6 +29,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.core.Ordered;
 
 /**
+ * 开启spring异步执行器，类似xml中的task标签配置，需要联合@Configuration注解一起使用
  * Enables Spring's asynchronous method execution capability, similar to functionality
  * found in Spring's {@code <task:*>} XML namespace.
  *
@@ -58,6 +59,7 @@ import org.springframework.core.Ordered;
  *     }
  * }</pre>
  *
+ * <p>默认情况下spring会先搜索TaskExecutor类型的bean或者名字为taskExecutor的Executor类型的bean，都不存在使用SimpleAsyncTaskExecutor执行器</p>
  * <p>By default, Spring will be searching for an associated thread pool definition:
  * either a unique {@link org.springframework.core.task.TaskExecutor} bean in the context,
  * or an {@link java.util.concurrent.Executor} bean named "taskExecutor" otherwise. If
@@ -74,6 +76,7 @@ import org.springframework.core.Ordered;
  * AsyncUncaughtExceptionHandler} through the {@link AsyncConfigurer#getAsyncUncaughtExceptionHandler
  * getAsyncUncaughtExceptionHandler()}
  * method.</li>
+ * <li>可实现AsyncConfigurer接口复写getAsyncExecutor获取异步执行器，getAsyncUncaughtExceptionHandler获取异步未捕获异常处理器</li>
  * </ul>
  *
  * <p><b>NOTE: {@link AsyncConfigurer} configuration classes get initialized early
@@ -130,6 +133,8 @@ import org.springframework.core.Ordered;
  * &lt;/beans&gt;
  * </pre>
  *
+ * 注解类和xml基本一致，但是使用注解类还可以自定义线程名前缀（上面的AppConfig-》getAsyncExecutor-》setThreadNamePrefix
+ *
  * The above XML-based and JavaConfig-based examples are equivalent except for the
  * setting of the <em>thread name prefix</em> of the {@code Executor}; this is because
  * the {@code <task:executor>} element does not expose such an attribute. This
@@ -140,12 +145,15 @@ import org.springframework.core.Ordered;
  * {@link AdviceMode#PROXY} (the default), then the other attributes control the behavior
  * of the proxying. Please note that proxy mode allows for interception of calls through
  * the proxy only; local calls within the same class cannot get intercepted that way.
- *
+ * <p>
+ *     这里就说明了@Async必须在不同方法中调用，即第一部分注意的第三点
+ * </p>
  * <p>Note that if the {@linkplain #mode} is set to {@link AdviceMode#ASPECTJ}, then the
  * value of the {@link #proxyTargetClass} attribute will be ignored. Note also that in
  * this case the {@code spring-aspects} module JAR must be present on the classpath, with
  * compile-time weaving or load-time weaving applying the aspect to the affected classes.
  * There is no proxy involved in such a scenario; local calls will be intercepted as well.
+ * <p>当然也可以用Aspect模式织入（需要引入spring-aspects模块需要的jar）</p>
  *
  * @author Chris Beams
  * @author Juergen Hoeller
@@ -163,6 +171,9 @@ import org.springframework.core.Ordered;
 public @interface EnableAsync {
 
 	/**
+	 * 该属性用来支持用户自定义异步注解，默认扫描spring的@Async和EJB3.1的@code @javax.ejb.Asynchronous
+	 */
+	/**
 	 * Indicate the 'async' annotation type to be detected at either class
 	 * or method level.
 	 * <p>By default, both Spring's @{@link Async} annotation and the EJB 3.1
@@ -173,6 +184,9 @@ public @interface EnableAsync {
 	 */
 	Class<? extends Annotation> annotation() default Annotation.class;
 
+	/**
+	 * 标明是否需要创建CGLIB子类代理，AdviceMode=PROXY时才适用。注意设置为true时，其它spring管理的bean也会升级到CGLIB子类代理
+	 */
 	/**
 	 * Indicate whether subclass-based (CGLIB) proxies are to be created as opposed
 	 * to standard Java interface-based proxies.
@@ -187,6 +201,9 @@ public @interface EnableAsync {
 	 */
 	boolean proxyTargetClass() default false;
 
+	/**
+	 * 标明异步注解bean处理器应该遵循的执行顺序，默认最低的优先级（Integer.MAX_VALUE，值越小优先级越高）
+	 */
 	/**
 	 * Indicate how async advice should be applied.
 	 * <p><b>The default is {@link AdviceMode#PROXY}.</b>

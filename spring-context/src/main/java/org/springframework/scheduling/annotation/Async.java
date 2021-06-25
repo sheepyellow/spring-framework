@@ -23,6 +23,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * 1. 该注解可以标记一个异步执行的方法，也可以用来标注类，表示类中的所有方法都是异步执行的
+ * 2. 入参随意，但是返回值只能是void或者Future.（ListenableFuture接口/CompletableFuture类）
+ * 3. Future是代理返回的切实的异步返回，用以追踪异步方法的返回值。当然也可以使用AsyncResult类（实现ListenableFuture接口）
+ *    （Spring或者EJB都有）或者CompletableFuture类
+ */
+
+/**
  * Annotation that marks a method as a candidate for <i>asynchronous</i> execution.
  * Can also be used at the type level, in which case all of the type's methods are
  * considered as asynchronous. Note, however, that {@code @Async} is not supported
@@ -55,6 +62,10 @@ import java.lang.annotation.Target;
 @Documented
 public @interface Async {
 
+	/**
+	 * 1. 用以限定执行方法的执行器名称（自定义）：Executor或者TaskExecutor
+	 * 2. 加在类上表示整个类都使用，加在方法上会覆盖类上的设置
+	 */
 	/**
 	 * A qualifier value for the specified asynchronous operation(s).
 	 * <p>May be used to determine the target executor to be used when executing
