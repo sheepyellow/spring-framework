@@ -95,8 +95,18 @@ public class AspectJAwareAdvisorAutoProxyCreator extends AbstractAdvisorAutoProx
 		AspectJProxyUtils.makeAdvisorChainAspectJCapableIfNecessary(candidateAdvisors);
 	}
 
+	/**
+	 * AbstractAutoProxyCreator.shouldSkip()方法中的List<Advisor> candidateAdvisors = findCandidateAdvisors();
+	 * 返回找到的候选的增强器，然后再调用父类的shouldSkip()返回false，就是不跳过的意思
+	 * @param beanClass the class of the bean
+	 * @param beanName the name of the bean
+	 * @return
+	 */
 	@Override
 	protected boolean shouldSkip(Class<?> beanClass, String beanName) {
+		/**
+		 * 找到候选的Advisors（通知者或者增强器对象）
+		 */
 		// TODO: Consider optimization by caching the list of the aspect names
 		List<Advisor> candidateAdvisors = findCandidateAdvisors();
 		for (Advisor advisor : candidateAdvisors) {
