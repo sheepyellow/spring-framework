@@ -19,6 +19,10 @@ package org.springframework.beans.factory.config;
 import org.springframework.beans.BeansException;
 
 /**
+ * Bean工厂的后置处理器：BeanFactoryProcessor(触发时机：bean注册之后，bean实例化之前)
+ */
+
+/**
  * Factory hook that allows for custom modification of an application context's
  * bean definitions, adapting the bean property values of the context's underlying
  * bean factory.

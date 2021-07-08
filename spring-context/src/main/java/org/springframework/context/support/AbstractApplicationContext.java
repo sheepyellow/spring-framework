@@ -571,6 +571,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				// Allows post-processing of the bean factory in context subclasses.
 				/**
 				 * 四、spring开放接口，留给子类去实现接口
+				 * Spring开放接口留给子类去实现该接口：主要用来改变BeanFactory比如给BeanFactory添加一些自己的BeanPostProcessor（Bean的后置处理器）
 				 * 子类覆盖方法做额外的处理，此处我们一般不做任何扩展工作，但是可以查看web中的代码，是有具体实现的
 				 */
 				postProcessBeanFactory(beanFactory);
@@ -579,6 +580,10 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				/**
 				 * 五、调用我们beanFactory的后置处理器
 				 * 调用各种beanFactory处理器
+				 *
+				 * 1. bean工厂的后置处理器：BeanFactoryPostProcessor(触发时机：bean注册之后，bean实例化之前)
+				 * 2. BeanDefinitionRegistryPostProcessor（触发时机：bean定义注册之前），所以可以在Bean工厂的后置处理器中修改Bean的定义信息，
+				 * 比如是否延时加载、加入一些新的bean的定义信息
 				 */
 				invokeBeanFactoryPostProcessors(beanFactory);
 
@@ -606,6 +611,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				/**
 				 * 九、这个方法同样也留给子类实现，其中springboot也是从这个方法进行tomcat的启动
 				 * 空方法，留给子类初始化其他bean
+				 * （后续讲Spring Boot的源码分析的时候会涉及到这块，比如：Spring容器的启动如何带动web容器tomcat的启动以及web容器tomcat的启动如何带动Spring容器的启动）
 				 */
 				onRefresh();
 
@@ -839,6 +845,9 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * <p>Must be called before singleton instantiation.
 	 */
 	protected void invokeBeanFactoryPostProcessors(ConfigurableListableBeanFactory beanFactory) {
+		/**
+		 * 传入bean工厂并获取容器中的bean工厂后置处理器（注意这里bean工厂后置处理器还没有初始化）
+		 */
 		PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(beanFactory, getBeanFactoryPostProcessors());
 
 		// Detect a LoadTimeWeaver and prepare for weaving, if found in the meantime
@@ -892,21 +901,43 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	}
 
 	/**
+	 * 从bean工厂中获取或者直接显示的new一个事件多播器赋值给applicationContext的applicationEventMulticaster属性
+	 * 事件多播器采用的典型的设计模式是观察者模式，多播器作为一个被观察者
+	 */
+	/**
 	 * Initialize the ApplicationEventMulticaster.
 	 * Uses SimpleApplicationEventMulticaster if none defined in the context.
 	 * @see org.springframework.context.event.SimpleApplicationEventMulticaster
 	 */
 	protected void initApplicationEventMulticaster() {
+		/**
+		 * 获取我们的bean工厂对象
+		 */
 		ConfigurableListableBeanFactory beanFactory = getBeanFactory();
+		/**
+		 * 判断容器中是否包含了applicationEventMulticaster事件多播器组件
+		 */
 		if (beanFactory.containsLocalBean(APPLICATION_EVENT_MULTICASTER_BEAN_NAME)) {
+			/**
+			 * 直接显示的调用getBean方法，获取出来赋值给applicationContext的applicationEventMulticaster属性
+			 */
 			this.applicationEventMulticaster =
 					beanFactory.getBean(APPLICATION_EVENT_MULTICASTER_BEAN_NAME, ApplicationEventMulticaster.class);
 			if (logger.isTraceEnabled()) {
 				logger.trace("Using ApplicationEventMulticaster [" + this.applicationEventMulticaster + "]");
 			}
 		}
+		/**
+		 * 如果容器中没有的话
+		 */
 		else {
+			/**
+			 * 直接new一个SimpleApplicationEventMulticaster
+			 */
 			this.applicationEventMulticaster = new SimpleApplicationEventMulticaster(beanFactory);
+			/**
+			 * 把new出来的多播器注册到容器中
+			 */
 			beanFactory.registerSingleton(APPLICATION_EVENT_MULTICASTER_BEAN_NAME, this.applicationEventMulticaster);
 			if (logger.isTraceEnabled()) {
 				logger.trace("No '" + APPLICATION_EVENT_MULTICASTER_BEAN_NAME + "' bean, using " +
@@ -958,21 +989,37 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 */
 	protected void registerListeners() {
 		// Register statically specified listeners first.
+		/**
+		 * 获取容器中所有的监听器对象
+		 */
 		for (ApplicationListener<?> listener : getApplicationListeners()) {
+			/**
+			 * 把监听器逐个注册到事件多播器上
+			 */
 			getApplicationEventMulticaster().addApplicationListener(listener);
 		}
 
 		// Do not initialize FactoryBeans here: We need to leave all regular beans
 		// uninitialized to let post-processors apply to them!
+		/**
+		 * 获取beanFactory中所有的监听器对象名称
+		 */
 		String[] listenerBeanNames = getBeanNamesForType(ApplicationListener.class, true, false);
 		for (String listenerBeanName : listenerBeanNames) {
 			getApplicationEventMulticaster().addApplicationListenerBean(listenerBeanName);
 		}
 
 		// Publish early application events now that we finally have a multicaster...
+		/**
+		 * 获取早期事件
+		 * 所谓早期事件指，以初始化但还没有注册到容器中的事件
+		 */
 		Set<ApplicationEvent> earlyEventsToProcess = this.earlyApplicationEvents;
 		this.earlyApplicationEvents = null;
 		if (!CollectionUtils.isEmpty(earlyEventsToProcess)) {
+			/**
+			 * 通过多播器播发早期事件
+			 */
 			for (ApplicationEvent earlyEvent : earlyEventsToProcess) {
 				getApplicationEventMulticaster().multicastEvent(earlyEvent);
 			}

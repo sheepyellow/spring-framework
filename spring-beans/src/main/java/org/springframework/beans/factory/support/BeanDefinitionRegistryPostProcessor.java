@@ -20,6 +20,10 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 
 /**
+ * BeanDefinitionRegistryPostProcessor（触发时机：bean定义注册之前），所以可以在Bean工厂的后置处理器中修改Bean的定义信息，比如是否延迟加载、加入一些新的Bean的定义信息等
+ */
+
+/**
  * Extension to the standard {@link BeanFactoryPostProcessor} SPI, allowing for
  * the registration of further bean definitions <i>before</i> regular
  * BeanFactoryPostProcessor detection kicks in. In particular,
