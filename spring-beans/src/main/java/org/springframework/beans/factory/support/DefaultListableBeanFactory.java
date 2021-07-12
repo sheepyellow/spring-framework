@@ -868,21 +868,39 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
 		// Iterate over a copy to allow for init methods which in turn register new bean definitions.
 		// While this may not be part of the regular factory bootstrap, it does otherwise work fine.
-		// 间所有BeanDefinition的名字创建一个集合
+		/**
+		 * 获取容器中所有bean定义的名称
+		 * 为所有BeanDefinition的名字创建一个集合
+		 */
 		List<String> beanNames = new ArrayList<>(this.beanDefinitionNames);
 
 		// Trigger initialization of all non-lazy singleton beans...
-		// 遍历集合中的队形，初始化所有非延时加载单例bean
+		/**
+		 * 遍历我们所有的bean定义名称
+		 * 遍历集合中的队形，初始化所有非延时加载单例bean
+		 */
 		for (String beanName : beanNames) {
-			// 合并父类beanDefinition
+			/**
+			 * 合并父类beanDefinition
+			 */
 			RootBeanDefinition bd = getMergedLocalBeanDefinition(beanName);
-			// 条件判断，是否非抽象、单例、非懒加载
+			/**
+			 * 条件判断，是否非抽象、单例、非懒加载
+			 * 根据bean定义判断是不是抽象的 && 单例的 && 非懒加载的
+			 */
 			if (!bd.isAbstract() && bd.isSingleton() && !bd.isLazyInit()) {
-				// 条件判断是否为FactoryBean接口
+				/**
+				 * 条件判断是否为FactoryBean接口
+				 */
 				if (isFactoryBean(beanName)) {
-					// 根据&+beanName获取具体对象
+					/**
+					 * 是给
+					 * 根据&+beanName获取具体对象
+					 */
 					Object bean = getBean(FACTORY_BEAN_PREFIX + beanName);
-					// 条件判断是否FactoryBean，是的话进行类型转换
+					/**
+					 * 条件判断是否FactoryBean，是的话进行类型转换
+					 */
 					if (bean instanceof FactoryBean) {
 						FactoryBean<?> factory = (FactoryBean<?>) bean;
 						// 判断这个FactoryBean是否急切需要初始化
@@ -896,22 +914,35 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 							isEagerInit = (factory instanceof SmartFactoryBean &&
 									((SmartFactoryBean<?>) factory).isEagerInit());
 						}
-						// 如果需要急切初始化，则通过beanName获取bean
+						/**
+						 * 如果需要急切初始化，则通过beanName获取bean
+						 */
 						if (isEagerInit) {
 							getBean(beanName);
 						}
 					}
 				}
 				else {
-					// 如果beanName对应的bean不是FactoryBean，只是普通的bean，则通过beanName获取bean实例
+					/**
+					 *	如果beanName对应的bean不是FactoryBean，只是普通的bean，则通过beanName获取bean实例
+					 */
 					getBean(beanName);
 				}
 			}
 		}
 
 		// Trigger post-initialization callback for all applicable beans...
+		/**
+		 * 获取所有的bean的名称 至此所有的单实例的bean已经加入到单实例Bean的缓存池中，所谓的单实例缓存池实际上就是一个ConcurrentHashMap
+		 */
 		for (String beanName : beanNames) {
+			/**
+			 * 从单例缓存池中获取所有的对象
+			 */
 			Object singletonInstance = getSingleton(beanName);
+			/**
+			 * 判断当前的bean是否实现了SmartInitializingSingleton接口
+			 */
 			if (singletonInstance instanceof SmartInitializingSingleton) {
 				SmartInitializingSingleton smartSingleton = (SmartInitializingSingleton) singletonInstance;
 				if (System.getSecurityManager() != null) {
@@ -921,6 +952,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 					}, getAccessControlContext());
 				}
 				else {
+					/**
+					 * 触发实例化之后的方法afterSingletonsInstantiated
+					 */
 					smartSingleton.afterSingletonsInstantiated();
 				}
 			}

@@ -181,6 +181,9 @@ public class SimpleApplicationEventMulticaster extends AbstractApplicationEventM
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	private void doInvokeListener(ApplicationListener listener, ApplicationEvent event) {
 		try {
+			/**
+			 * 会调用ApplicationListener的onApplicationEvent(event)方法
+			 */
 			listener.onApplicationEvent(event);
 		}
 		catch (ClassCastException ex) {

@@ -1032,7 +1032,10 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 */
 	protected void finishBeanFactoryInitialization(ConfigurableListableBeanFactory beanFactory) {
 		// Initialize conversion service for this context.
-		// 为上下文初始化类型转换服务
+		/**
+		 * 为上下文初始化类型转换服务
+		 * 为bean工厂设置类型转化器
+		 */
 		if (beanFactory.containsBean(CONVERSION_SERVICE_BEAN_NAME) &&
 				beanFactory.isTypeMatch(CONVERSION_SERVICE_BEAN_NAME, ConversionService.class)) {
 			beanFactory.setConversionService(
@@ -1055,15 +1058,21 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		}
 
 		// Stop using the temporary ClassLoader for type matching.
-		// 禁止使用临时类加载器进行类型匹配
+		/**
+		 * 禁止使用临时类加载器进行类型匹配
+		 */
 		beanFactory.setTempClassLoader(null);
 
 		// Allow for caching all bean definition metadata, not expecting further changes.
-		// 冻结所有的bean定义,说明注册的bean不在呗修改或任何进一步的处理
+		/**
+		 * 冻结所有的bean定义,至此注册的bean不再被修改或任何进一步的处理
+		 */
 		beanFactory.freezeConfiguration();
 
 		// Instantiate all remaining (non-lazy-init) singletons.
-		// 实例化剩下的单例对象（非懒加载）
+		/**
+		 * 实例化剩下的单例对象（非懒加载）
+		 */
 		beanFactory.preInstantiateSingletons();
 	}
 
