@@ -94,10 +94,21 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 	 * @see org.springframework.beans.factory.FactoryBean#getObject()
 	 */
 	protected Object getObjectFromFactoryBean(FactoryBean<?> factory, String beanName, boolean shouldPostProcess) {
+		/**
+		 * FactoryBean也有单例和非单例之分，针对不同类型的FactoryBean，这里有两种处理方式：
+		 * 1.单例 FactoryBean生成的bean实例也认为是单例类型，需要放入缓存中，供后续重复使用
+		 * 2.非单例 FactoryBean生成的bean实例则不会被放入缓存中，每次都会创建新的实例
+		 */
 		if (factory.isSingleton() && containsSingleton(beanName)) {
 			synchronized (getSingletonMutex()) {
+				/**
+				 * 从缓存中获取bean实例，避免多次返回bean实例
+				 */
 				Object object = this.factoryBeanObjectCache.get(beanName);
 				if (object == null) {
+					/**
+					 * 使用工厂对象创建实例
+					 */
 					object = doGetObjectFromFactoryBean(factory, beanName);
 					// Only post-process and store if not put there already during getObject() call above
 					// (e.g. because of circular reference processing triggered by custom getBean calls)
@@ -107,6 +118,9 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 					}
 					else {
 						if (shouldPostProcess) {
+							/**
+							 * 判断当前的bean是否正在创建
+							 */
 							if (isSingletonCurrentlyInCreation(beanName)) {
 								// Temporarily return non-post-processed object, not storing it yet..
 								return object;
@@ -123,7 +137,13 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 								afterSingletonCreation(beanName);
 							}
 						}
+						/**
+						 * 这里的beanName对应FactoryBean的实现类，FeactoryBean的实现类也会被实例化，并缓存在singleObjects中
+						 */
 						if (containsSingleton(beanName)) {
+							/**
+							 * 这里的beanName对应与FactoryBean的实例类，FactoryBean的实现类也会被实例化，并缓存在singleObjects中
+							 */
 							this.factoryBeanObjectCache.put(beanName, object);
 						}
 					}
@@ -166,6 +186,9 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 				}
 			}
 			else {
+				/**
+				 * 真正的调用工厂bean的getObject()方法
+				 */
 				object = factory.getObject();
 			}
 		}

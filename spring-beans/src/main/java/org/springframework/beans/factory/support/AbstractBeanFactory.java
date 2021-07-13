@@ -428,6 +428,11 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 							throw ex;
 						}
 					});
+					/**
+					 * 接下来bean = getObjectForBeanInstance(sharedInstance, name, beanName, mbd)，为什么不直接等于sharedInstance，
+					 * 原因可能刚刚创建的Bean是FactoryBean类型的Bean，如果是就要调用getObject方法来获取真正的Bean，
+					 * 运用场景就是那些创建Bean的逻辑比较复杂的情况下可以用这个，比如Spring整合Mybatis的SqlSessionFactoryBean
+					 */
 					bean = getObjectForBeanInstance(sharedInstance, name, beanName, mbd);
 				}
 
@@ -1933,6 +1938,9 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			Object beanInstance, String name, String beanName, @Nullable RootBeanDefinition mbd) {
 
 		// Don't let calling code try to dereference the factory if the bean isn't a factory.
+		/**
+		 * 如果name以&开头，但beanInstance却不是FactoryBean，则认为有问题
+		 */
 		if (BeanFactoryUtils.isFactoryDereference(name)) {
 			if (beanInstance instanceof NullBean) {
 				return beanInstance;
@@ -1949,6 +1957,10 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		// Now we have the bean instance, which may be a normal bean or a FactoryBean.
 		// If it's a FactoryBean, we use it to create a bean instance, unless the
 		// caller actually wants a reference to the factory.
+		/**
+		 * 如果上面的判断通过了，表明beanInstance是一个普通的bean，也可能是一个FactoryBean。如果是一个普通的bean，这里直接返回 beanInstance 即可。
+		 * 如果是 FactoryBean，则要调用工厂方法生成一个bean实例
+		 */
 		if (!(beanInstance instanceof FactoryBean)) {
 			return beanInstance;
 		}
@@ -1958,16 +1970,34 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			mbd.isFactoryBean = true;
 		}
 		else {
+			/**
+			 * 如果mkd为空，则从缓存中加载 bean。FactoryBean生成单例 bean 会被缓存
+			 * 在 factoryBeanObjectCache 集合中，不用每次创建
+			 */
 			object = getCachedObjectForFactoryBean(beanName);
 		}
 		if (object == null) {
 			// Return bean instance from factory.
+			/**
+			 * 经过前面的判断，到这里可以保证beanInstance是 FactoryBean类型的，所以可以进行类型转换
+			 */
 			FactoryBean<?> factory = (FactoryBean<?>) beanInstance;
 			// Caches object obtained from FactoryBean if it is a singleton.
+			/**
+			 * 如果mbd为空，判断是否存在名字为beanName的BeanDefinition
+			 */
 			if (mbd == null && containsBeanDefinition(beanName)) {
 				mbd = getMergedLocalBeanDefinition(beanName);
 			}
+			/**
+			 * synthetic的字面意思是"合成的"。通过全局查找，我发现在AOP相关的类中会将改属性设置为true。
+			 * 所以我觉得该字段可能表示某个 bean 是不是被AOP增强过，也就是 AOP 基于原始类合成了一个新的代理类。
+			 * 不过目前只是猜测，没有深究
+			 */
 			boolean synthetic = (mbd != null && mbd.isSynthetic());
+			/**
+			 * 调用 getObjectFromFactorybean 方法继续获取实例
+			 */
 			object = getObjectFromFactoryBean(factory, beanName, !synthetic);
 		}
 		return object;
