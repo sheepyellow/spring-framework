@@ -68,7 +68,9 @@ public interface BeanFactoryPostProcessor {
 
 	/**
 	 * Modify the application context's internal bean factory after its standard
-	 * initialization. All bean definitions will have been loaded, but no beans
+	 * initialization.
+	 * 翻译：在应用程序上下文的标准初始化之后修改它的内部bean工厂
+	 * All bean definitions will have been loaded, but no beans
 	 * will have been instantiated yet. This allows for overriding or adding
 	 * properties even to eager-initializing beans.
 	 * @param beanFactory the bean factory used by the application context

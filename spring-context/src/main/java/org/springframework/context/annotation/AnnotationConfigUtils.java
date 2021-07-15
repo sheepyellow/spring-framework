@@ -149,12 +149,21 @@ public abstract class AnnotationConfigUtils {
 	public static Set<BeanDefinitionHolder> registerAnnotationConfigProcessors(
 			BeanDefinitionRegistry registry, @Nullable Object source) {
 
+		/**
+		 * 获取beanFactory也就是DefaultListableBeanFactory
+		 */
 		DefaultListableBeanFactory beanFactory = unwrapDefaultListableBeanFactory(registry);
 		if (beanFactory != null) {
 			if (!(beanFactory.getDependencyComparator() instanceof AnnotationAwareOrderComparator)) {
+				/**
+				 * AnnotatioinAwareOrderComparator主要能解析@Order和@Priority
+				 */
 				beanFactory.setDependencyComparator(AnnotationAwareOrderComparator.INSTANCE);
 			}
 			if (!(beanFactory.getAutowireCandidateResolver() instanceof ContextAnnotationAutowireCandidateResolver)) {
+				/**
+				 * ContextAnnotationAutowireCandidateResolver提供处理延时加载的功能
+				 */
 				beanFactory.setAutowireCandidateResolver(new ContextAnnotationAutowireCandidateResolver());
 			}
 		}
@@ -162,6 +171,13 @@ public abstract class AnnotationConfigUtils {
 		Set<BeanDefinitionHolder> beanDefs = new LinkedHashSet<>(8);
 
 		/**
+		 * spring默认的BeanDefinition的注册，很重要需要，需要理解每个bean的类型
+		 */
+		/**
+		 * 注册ConfigurationAnnotationProcessor
+		 * ConfigurationClassPostProcessor是一个工厂后置处理器，这个后置处理器很重要，基本上类上面的注解都在这里面判断并解析，
+		 * spring的包扫描也在里面完成
+		 *
 		 * 为我们容器中注册解析主配置类的后置处理器ConfigurationClassPostProcessor
 		 * beanName = org.springframework.context.annotation.internalConfigurationAnnotationProcessor
 		 */
@@ -172,6 +188,9 @@ public abstract class AnnotationConfigUtils {
 		}
 
 		/**
+		 * 注册AutowiredAnnotationBeanPostProcessor
+		 * 顾名思义，就是处理@Autowired的，它是一个bean的后置处理器，把bean的属性注入的时候会用到
+		 *
 		 * 为我们容器中注册处理@Autowired注解的Bean的后置处理器AutowiredAnnotationBeanPostProcessor
 		 * beanName = org.springframework.context.annotation.internalAutowiredAnnotationProcessor
 		 */
@@ -182,6 +201,10 @@ public abstract class AnnotationConfigUtils {
 		}
 
 		/**
+		 * 注册CommonAnnotationBeanPostProcessor
+		 * 顾名思义就是处理一些公共注解的，它是一个bean的后置处理器，可以用来处理@PostConstruct和@PreDestroy还有@Resource等
+		 * 提示：这里有一个JSR-250的校验
+		 *
 		 * 为我们容器中注册处理JSR规范注解的Bean后置处理器CommonAnnotationBeanPostProcessor
 		 * beanName = org.springframework.context.annotation.internalCommonAnnotationProcessor
 		 */
@@ -193,6 +216,7 @@ public abstract class AnnotationConfigUtils {
 		}
 
 		/**
+		 * 注册PersistenceAnnotationBeanPostProcessor
 		 * 为我们容器注册处理jpa的Bean的后置处理器
 		 * beanName = org.springframework.context.annotation.internalPersistenceAnnotationProcessor
 		 */
@@ -212,6 +236,7 @@ public abstract class AnnotationConfigUtils {
 		}
 
 		/**
+		 * 注册EventListenerMethodProcessor
 		 * 处理监听方法的注解解析器EventListenerMethodProcessor
 		 * beanName = org.springframework.context.event.internalEventListenerProcessor
 		 */
@@ -222,6 +247,7 @@ public abstract class AnnotationConfigUtils {
 		}
 
 		/**
+		 * 注册DefaultEventListenerFactory
 		 * 注册事件监听器工厂
 		 * beanName = org.springframework.context.event.internalEventListenerFactory
 		 */

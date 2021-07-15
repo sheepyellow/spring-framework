@@ -38,6 +38,17 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 /**
+ * 共享bean实例的通用注册表，实现了SingletonBeanRegistry，允许注册表中注册的单例应该被所有调用者共享，通过bean名称获得
+ *
+ * 还支持登记的DisposableBean实例。（这可能会或不能正确的注册单例），关闭注册表时destroyed.
+ * 可以注册bean之间的依赖关系，执行适当的关闭顺序
+ *
+ * 这个类主要作用于基类的BeanFactory实现，提供基本的管理singleton bean 实例功能
+ *
+ * SingletonBeanRegistry注册器的默认实现，同时继承SimpleAliasRegistry。
+ * 因此这个类可以有别名注册的功能和单例bean注册的功能，并且他还支持注册DisposableBean实例;
+ * 它依赖ObjectFactory接口和DisposableBean接口(关闭注册表时调用到了destroy方法)。侧重于Bean的注册,销毁,以及依赖关系(关联关系)的注册和销毁。
+ *
  * Generic registry for shared bean instances, implementing the
  * {@link org.springframework.beans.factory.config.SingletonBeanRegistry}.
  * Allows for registering singleton instances that should be shared
@@ -75,6 +86,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 
 
 	/**
+	 * 存放singleton对象的缓存
 	 * 一级缓存
 	 * 用于保存beanName和创建bean实例之间的管席
 	 * Cache of singleton objects: bean name to bean instance.
@@ -82,6 +94,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(256);
 
 	/**
+	 * 存放制造singleton的工厂的缓存
 	 * 三级缓存
 	 * 用于保存beanName和创建bean工厂之间的关系
 	 * Cache of singleton factories: bean name to ObjectFactory.
@@ -89,6 +102,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap<>(16);
 
 	/**
+	 * 是存放singletonFactory 制造出来的 singleton 的缓存早期单例对象缓存
 	 * 二级缓存
 	 * 保存beanName和创建bean实例之间的关系，与singletonObjects的不同之处在于，当一个单例的bean被放到这里之后
 	 * Cache of early singleton objects: bean name to bean instance.
@@ -96,24 +110,37 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<>(16);
 
 	/**
-	 * 用来保存当前已注册的所欲bean
+	 * 用来保存当前已注册的所有bean
+	 * 就是单例注册表
 	 * Set of registered singletons, containing the bean names in registration order.
 	 **/
 	private final Set<String> registeredSingletons = new LinkedHashSet<>(256);
 
-	/** Names of beans that are currently in creation. */
+	/**
+	 * 目前正在创建中的单例bean的名称的集合
+	 * Names of beans that are currently in creation.
+	 */
 	private final Set<String> singletonsCurrentlyInCreation =
 			Collections.newSetFromMap(new ConcurrentHashMap<>(16));
 
-	/** Names of beans currently excluded from in creation checks. */
+	/**
+	 *
+	 * Names of beans currently excluded from in creation checks.
+	 */
 	private final Set<String> inCreationCheckExclusions =
 			Collections.newSetFromMap(new ConcurrentHashMap<>(16));
 
-	/** Collection of suppressed Exceptions, available for associating related causes. */
+	/**
+	 * 存放异常出现的相关的原因的集合
+	 * Collection of suppressed Exceptions, available for associating related causes.
+	 */
 	@Nullable
 	private Set<Exception> suppressedExceptions;
 
-	/** Flag that indicates whether we're currently within destroySingletons. */
+	/**
+	 * 标志，指示我们目前是否在销毁单例中
+	 * Flag that indicates whether we're currently within destroySingletons.
+	 */
 	private boolean singletonsCurrentlyInDestruction = false;
 
 	/** Disposable bean instances: bean name to disposable instance. */
