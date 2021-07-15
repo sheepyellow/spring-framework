@@ -37,10 +37,17 @@ import org.springframework.util.StringUtils;
 @SuppressWarnings("serial")
 public abstract class AttributeAccessorSupport implements AttributeAccessor, Serializable {
 
-	/** Map with String keys and Object values. */
+	/**
+	 * Map with String keys and Object values.
+	 * 用于存放属性键值对
+	 * */
 	private final Map<String, Object> attributes = new LinkedHashMap<>();
 
-
+	/**
+	 * 设置属性值
+	 * @param name the unique attribute key
+	 * @param value the attribute value to be attached
+	 */
 	@Override
 	public void setAttribute(String name, @Nullable Object value) {
 		Assert.notNull(name, "Name must not be null");
@@ -52,6 +59,11 @@ public abstract class AttributeAccessorSupport implements AttributeAccessor, Ser
 		}
 	}
 
+	/**
+	 * 获取属性值
+	 * @param name the unique attribute key
+	 * @return
+	 */
 	@Override
 	@Nullable
 	public Object getAttribute(String name) {
@@ -59,6 +71,11 @@ public abstract class AttributeAccessorSupport implements AttributeAccessor, Ser
 		return this.attributes.get(name);
 	}
 
+	/**
+	 * 删除属性值
+	 * @param name the unique attribute key
+	 * @return
+	 */
 	@Override
 	@Nullable
 	public Object removeAttribute(String name) {
@@ -66,12 +83,21 @@ public abstract class AttributeAccessorSupport implements AttributeAccessor, Ser
 		return this.attributes.remove(name);
 	}
 
+	/**
+	 * 判断是否有属性值
+	 * @param name the unique attribute key
+	 * @return
+	 */
 	@Override
 	public boolean hasAttribute(String name) {
 		Assert.notNull(name, "Name must not be null");
 		return this.attributes.containsKey(name);
 	}
 
+	/**
+	 * 获取所有属性值名字
+	 * @return
+	 */
 	@Override
 	public String[] attributeNames() {
 		return StringUtils.toStringArray(this.attributes.keySet());
@@ -79,6 +105,7 @@ public abstract class AttributeAccessorSupport implements AttributeAccessor, Ser
 
 
 	/**
+	 * 内部使用，属性值的拷贝
 	 * Copy the attributes from the supplied AttributeAccessor to this accessor.
 	 * @param source the AttributeAccessor to copy from
 	 */
@@ -91,6 +118,11 @@ public abstract class AttributeAccessorSupport implements AttributeAccessor, Ser
 	}
 
 
+	/**
+	 * 重写equals方法，判断是否与别的属性类共用一个存储结构，即判断LinkedHasMap是否相等
+	 * @param other
+	 * @return
+	 */
 	@Override
 	public boolean equals(@Nullable Object other) {
 		return (this == other || (other instanceof AttributeAccessorSupport &&

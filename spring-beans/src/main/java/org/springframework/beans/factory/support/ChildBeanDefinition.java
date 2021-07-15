@@ -22,6 +22,10 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 /**
+ * 从Spring2.5开始，GenericBeanDefinition是注册bean的首选方法
+ * 2.5之前是没有这个类的，现在已经不使用ChildBeanDefinition了，完全被GenericBeanDefinition是注册bean的首选方法替代了，
+ * 但是还在使用RootBeanDefinition
+ * RootBeanDefinition也有这种类似的注解
  * Bean definition for beans which inherit settings from their parent.
  * Child bean definitions have a fixed dependency on a parent bean definition.
  *
@@ -46,6 +50,9 @@ import org.springframework.util.ObjectUtils;
 @SuppressWarnings("serial")
 public class ChildBeanDefinition extends AbstractBeanDefinition {
 
+	/**
+	 * 父类名称
+	 */
 	@Nullable
 	private String parentName;
 
@@ -58,6 +65,7 @@ public class ChildBeanDefinition extends AbstractBeanDefinition {
 	 * @see #setScope
 	 * @see #setConstructorArgumentValues
 	 * @see #setPropertyValues
+	 * 构造函数，必须设置一个父类
 	 */
 	public ChildBeanDefinition(String parentName) {
 		super();
@@ -68,6 +76,7 @@ public class ChildBeanDefinition extends AbstractBeanDefinition {
 	 * Create a new ChildBeanDefinition for the given parent.
 	 * @param parentName the name of the parent bean
 	 * @param pvs the additional property values of the child
+	 * 构造函数，设置父类的业务类属性
 	 */
 	public ChildBeanDefinition(String parentName, MutablePropertyValues pvs) {
 		super(null, pvs);
@@ -79,6 +88,7 @@ public class ChildBeanDefinition extends AbstractBeanDefinition {
 	 * @param parentName the name of the parent bean
 	 * @param cargs the constructor argument values to apply
 	 * @param pvs the additional property values of the child
+	 * 构造函数，设置父类，业务类构造函数的参数，业务类属性
 	 */
 	public ChildBeanDefinition(
 			String parentName, ConstructorArgumentValues cargs, MutablePropertyValues pvs) {
@@ -94,6 +104,7 @@ public class ChildBeanDefinition extends AbstractBeanDefinition {
 	 * @param beanClass the class of the bean to instantiate
 	 * @param cargs the constructor argument values to apply
 	 * @param pvs the property values to apply
+	 * 构造函数，设置父类，业务类beanClass，业务类构造函数的参数，业务类属性
 	 */
 	public ChildBeanDefinition(
 			String parentName, Class<?> beanClass, ConstructorArgumentValues cargs, MutablePropertyValues pvs) {
@@ -111,6 +122,7 @@ public class ChildBeanDefinition extends AbstractBeanDefinition {
 	 * @param beanClassName the name of the class to instantiate
 	 * @param cargs the constructor argument values to apply
 	 * @param pvs the property values to apply
+	 * 构造函数，设置父类，业务类名称，业务类构造函数的参数，业务类属性
 	 */
 	public ChildBeanDefinition(
 			String parentName, String beanClassName, ConstructorArgumentValues cargs, MutablePropertyValues pvs) {
@@ -124,6 +136,7 @@ public class ChildBeanDefinition extends AbstractBeanDefinition {
 	 * Create a new ChildBeanDefinition as deep copy of the given
 	 * bean definition.
 	 * @param original the original bean definition to copy from
+	 * 构造函数，从另一个ChildBeanDefinition进行属性copy
 	 */
 	public ChildBeanDefinition(ChildBeanDefinition original) {
 		super(original);
@@ -131,16 +144,26 @@ public class ChildBeanDefinition extends AbstractBeanDefinition {
 
 
 	@Override
+	/**
+	 * 设置父类名称
+	 */
 	public void setParentName(@Nullable String parentName) {
 		this.parentName = parentName;
 	}
 
 	@Override
 	@Nullable
+	/**
+	 * 获取父类名称
+	 */
 	public String getParentName() {
 		return this.parentName;
 	}
 
+	/**
+	 * 检验、会发现，如果没有父类就会报错
+	 * @throws BeanDefinitionValidationException
+	 */
 	@Override
 	public void validate() throws BeanDefinitionValidationException {
 		super.validate();
@@ -149,7 +172,9 @@ public class ChildBeanDefinition extends AbstractBeanDefinition {
 		}
 	}
 
-
+	/**
+	 * 生成一个ChildBeanDefinition，并进行属性值复制
+	 */
 	@Override
 	public AbstractBeanDefinition cloneBeanDefinition() {
 		return new ChildBeanDefinition(this);

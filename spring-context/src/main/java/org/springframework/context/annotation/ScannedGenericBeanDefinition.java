@@ -26,6 +26,12 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
+ * 有@Component注解的类，会生成ScannedGenericBeanDefinition类型的Bean定义。
+ * 注意其它继承了@Component的注解如@Service、@Controller、@Repository也是生成ScannedGenericBeanDefinition类型的Bean定义。
+ *
+ * ScannedGenericBeanDefinition实现了AnnotatedBeanDefinition接口且继承了GenericBeanDefinition类，scan翻译成中文就是扫描的意思，
+ * 顾名思义，它就是spring扫描后生成的BeanDefinition。它的源码也很容易理解，读者自行查阅。
+ *
  * Extension of the {@link org.springframework.beans.factory.support.GenericBeanDefinition}
  * class, based on an ASM ClassReader, with support for annotation metadata exposed
  * through the {@link AnnotatedBeanDefinition} interface.

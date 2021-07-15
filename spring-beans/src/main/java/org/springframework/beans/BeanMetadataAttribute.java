@@ -21,6 +21,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
 /**
+ * BeanMetadataAttributeAccessor类中对属性的键值对进行封装
  * Holder for a key-value style attribute that is part of a bean definition.
  * Keeps track of the definition source in addition to the key-value pair.
  *
@@ -28,17 +29,29 @@ import org.springframework.util.ObjectUtils;
  * @since 2.5
  */
 public class BeanMetadataAttribute implements BeanMetadataElement {
-
+	/**
+	 * 属性信息
+	 */
+	/**
+	 * 属性名
+	 */
 	private final String name;
 
+	/**
+	 * 属性值
+	 */
 	@Nullable
 	private final Object value;
 
+	/**
+	 * 属性所属对象，这里的源是属性值对象的源，不是BeanDefinition中所封装的业务类的源
+	 */
 	@Nullable
 	private Object source;
 
 
 	/**
+	 * 构造器（设置属性信息）
 	 * Create a new AttributeValue instance.
 	 * @param name the name of the attribute (never {@code null})
 	 * @param value the value of the attribute (possibly before type conversion)
@@ -51,6 +64,7 @@ public class BeanMetadataAttribute implements BeanMetadataElement {
 
 
 	/**
+	 * 获取属性名，属性值以及获取、设置属性所属对象
 	 * Return the name of the attribute.
 	 */
 	public String getName() {
@@ -79,7 +93,11 @@ public class BeanMetadataAttribute implements BeanMetadataElement {
 		return this.source;
 	}
 
-
+	/**
+	 * 判断属性是否相等
+	 * @param other
+	 * @return
+	 */
 	@Override
 	public boolean equals(@Nullable Object other) {
 		if (this == other) {

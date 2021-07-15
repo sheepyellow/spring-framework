@@ -20,6 +20,7 @@ import org.springframework.core.AttributeAccessorSupport;
 import org.springframework.lang.Nullable;
 
 /**
+ * 既可以操作属性（继承了AttributeAccessorSubpport）,又可以操作源（实现了BeanMetadataElement）
  * Extension of {@link org.springframework.core.AttributeAccessorSupport},
  * holding attributes as {@link BeanMetadataAttribute} objects in order
  * to keep track of the definition source.
@@ -37,11 +38,15 @@ public class BeanMetadataAttributeAccessor extends AttributeAccessorSupport impl
 	/**
 	 * Set the configuration source {@code Object} for this metadata element.
 	 * <p>The exact type of the object will depend on the configuration mechanism used.
+	 * 设置源
 	 */
 	public void setSource(@Nullable Object source) {
 		this.source = source;
 	}
 
+	/**
+	 * 获取源
+	 */
 	@Override
 	@Nullable
 	public Object getSource() {
@@ -50,6 +55,7 @@ public class BeanMetadataAttributeAccessor extends AttributeAccessorSupport impl
 
 
 	/**
+	 * 设置属性值，如果存在就覆盖，不存在就添加，BeanMetadataAttribute封装了键值对
 	 * Add the given BeanMetadataAttribute to this accessor's set of attributes.
 	 * @param attribute the BeanMetadataAttribute object to register
 	 */
@@ -62,17 +68,28 @@ public class BeanMetadataAttributeAccessor extends AttributeAccessorSupport impl
 	 * @param name the name of the attribute
 	 * @return the corresponding BeanMetadataAttribute object,
 	 * or {@code null} if no such attribute defined
+	 * 根据名字获取键值对的封装对象BeanMetadataAttribute
 	 */
 	@Nullable
 	public BeanMetadataAttribute getMetadataAttribute(String name) {
 		return (BeanMetadataAttribute) super.getAttribute(name);
 	}
 
+	/**
+	 * 设置属性值，name表示建，value表示值
+	 * @param name the unique attribute key
+	 * @param value the attribute value to be attached
+	 */
 	@Override
 	public void setAttribute(String name, @Nullable Object value) {
 		super.setAttribute(name, new BeanMetadataAttribute(name, value));
 	}
 
+	/**
+	 * 根据键获取属性值
+	 * @param name the unique attribute key
+	 * @return
+	 */
 	@Override
 	@Nullable
 	public Object getAttribute(String name) {
@@ -80,6 +97,11 @@ public class BeanMetadataAttributeAccessor extends AttributeAccessorSupport impl
 		return (attribute != null ? attribute.getValue() : null);
 	}
 
+	/**
+	 * 移除属性值，并返回值，不存在就返回空
+	 * @param name the unique attribute key
+	 * @return
+	 */
 	@Override
 	@Nullable
 	public Object removeAttribute(String name) {

@@ -26,6 +26,11 @@ import org.springframework.core.annotation.MergedAnnotations.SearchStrategy;
 import org.springframework.lang.Nullable;
 
 /**
+ * AnnotationAwareOrderComparator是OrderComparator的子类，
+ * 用来支持Spring的Order类、@Order注解和@Priority注解
+ */
+
+/**
  * {@code AnnotationAwareOrderComparator} is an extension of
  * {@link OrderComparator} that supports Spring's
  * {@link org.springframework.core.Ordered} interface as well as the
@@ -47,11 +52,17 @@ import org.springframework.lang.Nullable;
 public class AnnotationAwareOrderComparator extends OrderComparator {
 
 	/**
+	 * 对外提供的共享实例
+	 */
+	/**
 	 * Shared default instance of {@code AnnotationAwareOrderComparator}.
 	 */
 	public static final AnnotationAwareOrderComparator INSTANCE = new AnnotationAwareOrderComparator();
 
 
+	/**
+	 * 用来检查实现Ordered接口、@Order和@Priority注解
+	 */
 	/**
 	 * This implementation checks for {@link Order @Order} or
 	 * {@link javax.annotation.Priority @Priority} on various kinds of
@@ -61,6 +72,9 @@ public class AnnotationAwareOrderComparator extends OrderComparator {
 	@Override
 	@Nullable
 	protected Integer findOrder(Object obj) {
+		/**
+		 * 检查常规的Ordered接口，通过子类重写的getOrder方法返回顺序值
+		 */
 		Integer order = super.findOrder(obj);
 		if (order != null) {
 			return order;

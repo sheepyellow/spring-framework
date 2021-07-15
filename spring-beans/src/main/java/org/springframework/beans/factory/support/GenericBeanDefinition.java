@@ -40,6 +40,9 @@ import org.springframework.util.ObjectUtils;
 @SuppressWarnings("serial")
 public class GenericBeanDefinition extends AbstractBeanDefinition {
 
+	/**
+	 * 父BeanDefinition名字
+	 */
 	@Nullable
 	private String parentName;
 
@@ -51,12 +54,14 @@ public class GenericBeanDefinition extends AbstractBeanDefinition {
 	 * @see #setScope
 	 * @see #setConstructorArgumentValues
 	 * @see #setPropertyValues
+	 * 构造方法，所有属性均为空
 	 */
 	public GenericBeanDefinition() {
 		super();
 	}
 
 	/**
+	 * 从一个给定的BeanDefinition中将属性值copy给新的GenericBeanDefinition
 	 * Create a new GenericBeanDefinition as deep copy of the given
 	 * bean definition.
 	 * @param original the original bean definition to copy from
@@ -65,19 +70,29 @@ public class GenericBeanDefinition extends AbstractBeanDefinition {
 		super(original);
 	}
 
-
+	/**
+	 * 设置父类名称
+	 * @param parentName
+	 */
 	@Override
 	public void setParentName(@Nullable String parentName) {
 		this.parentName = parentName;
 	}
 
+	/**
+	 * 获取父类名称
+	 * @return
+	 */
 	@Override
 	@Nullable
 	public String getParentName() {
 		return this.parentName;
 	}
 
-
+	/**
+	 * 根据当前GenericBeanDefinition克隆一个新的GenericBeanDefinition
+	 * @return
+	 */
 	@Override
 	public AbstractBeanDefinition cloneBeanDefinition() {
 		return new GenericBeanDefinition(this);

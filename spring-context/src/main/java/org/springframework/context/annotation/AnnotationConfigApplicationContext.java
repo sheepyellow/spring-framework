@@ -53,6 +53,9 @@ import org.springframework.util.Assert;
  */
 public class AnnotationConfigApplicationContext extends GenericApplicationContext implements AnnotationConfigRegistry {
 
+	/**
+	 * AnnotatedBeanDefinitionReader负责将@Bean注解的方法转换为对应的ConfigurationClassBeanDefinition类
+	 */
 	private final AnnotatedBeanDefinitionReader reader;
 
 	private final ClassPathBeanDefinitionScanner scanner;
@@ -96,9 +99,13 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 		 * 再调用自己的无参构造函数
 		 */
 		this();
-		// 注册我们定义的配置类
+		/**
+		 * 注册配置类
+		 */
 		register(componentClasses);
-		// 容器刷新
+		/**
+		 * 加载或刷新当前的配置信息
+		 */
 		refresh();
 	}
 
